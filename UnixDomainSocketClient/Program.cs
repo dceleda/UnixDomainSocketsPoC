@@ -26,20 +26,21 @@ namespace UnixDomainSocketClient
                     client.Connect(endPoint);
                     Console.WriteLine($"[Client] Connected to … ..{path}");
                     String str = String.Empty;
-                    var bytes = new byte[100];
+                    var bytes = new byte[5];
                     while (!str.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
                     {
                         Console.WriteLine("[Client]Enter something: ");
                         var line = Console.ReadLine();
-                        client.Send(Encoding.UTF8.GetBytes(line));
+                        client.Send(Encoding.UTF8.GetBytes(line + "\0"));
                         Console.Write("[Client]From Server: ");
 
                         StringBuilder sb = new();
                         int byteRecv = client.Receive(bytes);                       
-                        while(byteRecv > 0)
+                        while (byteRecv > 0)
                         {
-                            sb.Append(Encoding.UTF8.GetString(bytes, 0, byteRecv));
-                            if(byteRecv < bytes.Length)
+                            var stringReceived = Encoding.UTF8.GetString(bytes, 0, byteRecv);
+                            sb.Append(stringReceived);
+                            if(stringReceived.Contains("\0"))
                             {
                                 break;
                             }
