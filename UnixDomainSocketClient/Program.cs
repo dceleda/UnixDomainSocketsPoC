@@ -2,35 +2,57 @@
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace UnixDomainSocketClient
 {
     class Program
     {
-        static void Main(string[] args)
+        private static bool _isDemon = false;
+        private static int _interval = 1000;
+        private static string _messagePrefix = "Test_";
+        private static int _counter = 0;
+
+        static async Task Main(string[] args)
         {
-            //var path = Console.ReadLine();
             var path = @"C:\temp\file.soc";
-            StartClient(path);
+
+            Console.WriteLine("Provide client type (1 - demon or else");
+            var clientType = Console.ReadKey();
+
+            if(clientType.KeyChar == '1')
+            {
+                _isDemon = true;
+
+                Console.WriteLine("Provide interval in ms");
+                _interval = int.Parse(Console.ReadLine());
+
+                Console.WriteLine("Provide msg prefix");
+                _messagePrefix = Console.ReadLine();
+
+                await StartClientAsync(path);
+            }
+            
+
             Console.ReadLine();
         }
 
-        private static void StartClient(String path)
+        private static async Task StartClientAsync(String path)
         {
-
-            var endPoint = new UnixDomainSocketEndPoint(path);
             try
             {
+                var endPoint = new UnixDomainSocketEndPoint(path);
+
                 using (var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
                 {
                     client.Connect(endPoint);
                     Console.WriteLine($"[Client] Connected to … ..{path}");
-                    String str = String.Empty;
+
                     var bytes = new byte[5];
-                    while (!str.Equals("exit", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        Console.WriteLine("[Client]Enter something: ");
-                        var line = Console.ReadLine();
+                    while (true)
+                    {                       
+                        var line = await GetInput();
+
                         client.Send(Encoding.UTF8.GetBytes(line + "\0"));
                         Console.Write("[Client]From Server: ");
 
@@ -57,9 +79,21 @@ namespace UnixDomainSocketClient
             }
             finally
             {
-                try { File.Delete(path); }
-                catch { }
             }
+        }
+
+        private static async Task<string> GetInput()
+        {
+            if (_isDemon)
+            {
+                await Task.Delay(_interval);
+
+                _counter++;
+                return $"{_messagePrefix}{_counter}";
+            }
+
+            Console.WriteLine("[Client]Enter something: ");
+            return Console.ReadLine();
         }
     }
 }
