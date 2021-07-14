@@ -6,16 +6,17 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnixDomainSocketsServer.Common;
 
 namespace UnixDomainSocketsServer
 {
-    public class UnixDomainSocketRunner : IDisposable
+    public class AsyncRunnerWithEOM : IDisposable
     {
         private ManualResetEvent _resetEvent = new ManualResetEvent(false);
         private string _path = @"C:\temp\file.soc";
         private Socket _server;
 
-        public void StartAsync()
+        public void Start()
         {
             var task = Task.Factory.StartNew((x) =>
             {
@@ -175,31 +176,6 @@ namespace UnixDomainSocketsServer
             }
 
             DeleteSocketFileIfExists(_path);
-        }
-    }
-
-    public class StateObject
-    {
-        public StateObject(Socket socket)
-        {
-            ClientSocket = socket;
-        }
-        public Socket ClientSocket;
-        public const int BufferSize = 5;
-        public byte[] Buffer = new byte[BufferSize];
-
-        public StringBuilder MsgBuilder = new StringBuilder();
-    }
-
-    static class SocketExtensions
-    {
-        public static bool IsConnected(this Socket socket)
-        {
-            try
-            {
-                return !(socket.Poll(1, SelectMode.SelectRead) && socket.Available == 0);
-            }
-            catch (SocketException) { return false; }
         }
     }
 }
