@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace UnixDomainSocketClient
 {
-    public class ClientWIthAvailable : BaseClient
+    public class ClientWithAvailable : BaseClient
     {
         public async Task Start(string path)
         {
@@ -25,8 +25,8 @@ namespace UnixDomainSocketClient
                     {
                         var line = await GetInput();
 
-                        socket.Send(Encoding.UTF8.GetBytes(line));
-                        Console.Write("[Client]From Server: ");
+                        socket.Send(Encoding.UTF8.GetBytes(line+Environment.NewLine));
+                        Console.WriteLine("[Client]From Server: ");
 
                         StringBuilder sb = new();
                         int byteRecv = socket.Receive(bytes);

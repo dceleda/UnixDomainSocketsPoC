@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UnixDomainSocketsServer.Common;
+using UnixDomainSocketsServer.Model;
 
 namespace UnixDomainSocketsServer
 {
@@ -38,7 +40,7 @@ namespace UnixDomainSocketsServer
 
                 _server.Bind(endPoint);
                 Console.WriteLine($"[Server] Listening … ..{path}");
-                _server.Listen(10);
+                _server.Listen(3);
 
                 while (true)
                 {
@@ -68,28 +70,64 @@ namespace UnixDomainSocketsServer
             }
         }
 
-        private async void AcceptCallback(IAsyncResult ar)
+        private void AcceptCallback(IAsyncResult ar)
         {
             Socket clientSocket = null;
 
             try
             {
-                using (Socket client = _server.EndAccept(ar))
-                using (NetworkStream stream = new NetworkStream(client))
-                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
-                using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
+                using (clientSocket = _server.EndAccept(ar))
                 {
-                    string text;
+                    _resetEvent.Set();
 
-                    while ((text = await reader.ReadLineAsync()) != null)
+                    using (NetworkStream stream = new NetworkStream(clientSocket))
+                    using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                    //using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
                     {
-                        Console.WriteLine("SERVER: received \"" + text + "\"");
-                        writer.WriteLine(text.ToUpper());
-                        writer.Flush();
+                        stream.ReadTimeout = 10000;
+                        var jsonReader = new JsonTextReader(reader);
+                        jsonReader.SupportMultipleContent = true;
+
+                        while (true)
+                        {
+                            try
+                            {
+                                if (!jsonReader.Read())
+                                {
+                                    break;
+                                }
+
+                                JsonSerializer deserializer = new JsonSerializer();
+                                Person person = null;
+
+                                try
+                                {
+                                    person = deserializer.Deserialize<Person>(jsonReader);
+
+                                }
+                                catch(IOException exc)
+                                {
+                                    //jsonReader.
+                                }
+
+                                //JsonSerializer serializer = new JsonSerializer();
+                                //Console.WriteLine("SERVER: received \"" +  + "\"");
+                                if (person != null)
+                                {
+                                    var serialized = System.Text.Json.JsonSerializer.Serialize<Person>(person);
+                                    clientSocket.Send(Encoding.UTF8.GetBytes(serialized.ToUpper()));
+                                }
+                            }
+                            catch (JsonException exc)
+                            {
+                                clientSocket.Send(Encoding.UTF8.GetBytes($"Error when deserializing: {exc.Message}"));
+                                clientSocket.Send(Encoding.UTF8.GetBytes($"Closing connection."));
+
+                                break;
+                            }
+                        }
                     }
                 }
-
-                _resetEvent.Set();
             }
             catch (SocketException exc) when (exc.SocketErrorCode == SocketError.ConnectionReset)
             {
@@ -104,56 +142,7 @@ namespace UnixDomainSocketsServer
             catch (Exception exc)
             {
                 Log(exc);
-                clientSocket?.Dispose();
-            }
-        }
 
-        private void ReadCallback(IAsyncResult ar)
-        {
-            Socket clientSocket = null;
-
-            try
-            {
-                StateObject state = ar.AsyncState as StateObject;
-                clientSocket = state.ClientSocket;
-
-                // Read data from the client socket.  
-                int read = clientSocket.EndReceive(ar);
-
-                // Data was read from the client socket.  
-                if (read > 0)
-                {
-                    var incoming = Encoding.UTF8.GetString(state.Buffer, 0, read);
-                    state.MsgBuilder.Append(incoming);
-
-                    if (incoming.Contains("\0"))
-                    {
-                        // PROCESS the message
-                        clientSocket.Send(Encoding.UTF8.GetBytes(state.MsgBuilder.ToString().ToUpper()));
-                        state.MsgBuilder.Clear();
-                    }
-
-                    clientSocket.BeginReceive(state.Buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
-                }
-                else
-                {
-                    Console.WriteLine("Closing connection");
-                    clientSocket.Dispose();
-                }
-            }
-            catch (SocketException exc) when (exc.SocketErrorCode == SocketError.ConnectionReset)
-            {
-                Console.WriteLine("IPC client disconnected.");
-                clientSocket?.Dispose();
-            }
-            catch (SocketException exc)
-            {
-                Console.WriteLine($"{exc.ErrorCode}:{exc.Message}");
-                clientSocket?.Dispose();
-            }
-            catch (Exception exc)
-            {
-                Log(exc);
                 clientSocket?.Dispose();
             }
         }
