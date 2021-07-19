@@ -107,12 +107,12 @@ namespace UnixDomainSocketsServer
                 StateObject state = ar.AsyncState as StateObject;
                 clientSocket = state.ClientSocket;
 
-                Console.WriteLine($"Client bytes available:{clientSocket.Available}");
+                //Console.WriteLine($"Client bytes available:{clientSocket.Available}");
 
                 // Read data from the client socket.  
                 int read = clientSocket.EndReceive(ar);
 
-                Console.WriteLine($"Client bytes available:{clientSocket.Available}");
+                //Console.WriteLine($"Client bytes available:{clientSocket.Available}");
 
                 // Data was read from the client socket.  
                 if (read > 0)
@@ -120,7 +120,7 @@ namespace UnixDomainSocketsServer
                     var incoming = Encoding.UTF8.GetString(state.Buffer, 0, read);
                     state.MsgBuilder.Append(incoming);
 
-                    if (read < StateObject.BufferSize || read == StateObject.BufferSize && clientSocket.Available == 0)
+                    if (read < StateObject.BufferSize)
                     {
                         // PROCESS the message
                         clientSocket.Send(Encoding.UTF8.GetBytes(state.MsgBuilder.ToString().ToUpper()));

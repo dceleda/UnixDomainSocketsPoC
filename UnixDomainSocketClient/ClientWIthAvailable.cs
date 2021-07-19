@@ -9,10 +9,12 @@ namespace UnixDomainSocketClient
 {
     public class ClientWithAvailable : BaseClient
     {
-        public async Task Start(string path)
+        public override async Task Start(string path)
         {
             try
             {
+                await base.Start(path);
+
                 var endPoint = new UnixDomainSocketEndPoint(path);
 
                 using (var socket = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))
@@ -25,23 +27,33 @@ namespace UnixDomainSocketClient
                     {
                         var line = await GetInput();
 
-                        socket.Send(Encoding.UTF8.GetBytes(line+Environment.NewLine));
-                        Console.WriteLine("[Client]From Server: ");
-
-                        StringBuilder sb = new();
-                        int byteRecv = socket.Receive(bytes);
-                        while (byteRecv > 0)
+                        if (line.ToUpper() == "CLOSE")
                         {
-                            var stringReceived = Encoding.UTF8.GetString(bytes, 0, byteRecv);
-                            sb.Append(stringReceived);
-                            if (byteRecv < BufferSize || byteRecv == BufferSize && socket.Available == 0)
-                            {
-                                break;
-                            }
-                            byteRecv = socket.Receive(bytes);
+                            socket.Close();
+                            break;
                         }
+                        else
+                        {
+                            socket.Send(Encoding.UTF8.GetBytes(line + Environment.NewLine));
+                            //socket.Shutdown(SocketShutdown.Send);
 
-                        Console.WriteLine(sb.ToString());
+                            PrintOutput("[Client]From Server: ");
+
+                            StringBuilder sb = new();
+                            int byteRecv = socket.Receive(bytes);
+                            while (byteRecv > 0)
+                            {
+                                var stringReceived = Encoding.UTF8.GetString(bytes, 0, byteRecv);
+                                sb.Append(stringReceived);
+                                if (byteRecv < BufferSize || byteRecv == BufferSize && socket.Available == 0)
+                                {
+                                    break;
+                                }
+                                byteRecv = socket.Receive(bytes);
+                            }
+
+                            PrintOutput(sb.ToString());
+                        }
                     }
                 }
             }

@@ -9,10 +9,12 @@ namespace UnixDomainSocketClient
 {
     public class ClientWithEOM : BaseClient
     {
-        public async Task Start(string path)
+        public override async Task Start(string path)
         {
             try
             {
+                await base.Start(path);
+
                 var endPoint = new UnixDomainSocketEndPoint(path);
 
                 using (var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified))

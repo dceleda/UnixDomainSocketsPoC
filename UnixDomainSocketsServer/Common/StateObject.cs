@@ -14,7 +14,7 @@ namespace UnixDomainSocketsServer.Common
             ClientSocket = socket;
         }
         public Socket ClientSocket;
-        public const int BufferSize = 5;
+        public const int BufferSize = 1024;
         public byte[] Buffer = new byte[BufferSize];
 
         public StringBuilder MsgBuilder = new StringBuilder();

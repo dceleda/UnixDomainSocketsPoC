@@ -40,7 +40,7 @@ namespace UnixDomainSocketsServer
 
                 _server.Bind(endPoint);
                 Console.WriteLine($"[Server] Listening … ..{path}");
-                _server.Listen(3);
+                _server.Listen(0);
 
                 while (true)
                 {
@@ -85,6 +85,8 @@ namespace UnixDomainSocketsServer
                     //using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
                     {
                         stream.ReadTimeout = 10000;
+                        stream.WriteTimeout = 100000;
+
                         var jsonReader = new JsonTextReader(reader);
                         jsonReader.SupportMultipleContent = true;
 
@@ -128,6 +130,11 @@ namespace UnixDomainSocketsServer
                         }
                     }
                 }
+            }
+            catch(IOException exc) when (exc.InnerException != null && exc.InnerException is SocketException se && se.SocketErrorCode == SocketError.ConnectionReset)
+            {
+                Console.WriteLine("Client disconnected.");
+                clientSocket?.Dispose();
             }
             catch (SocketException exc) when (exc.SocketErrorCode == SocketError.ConnectionReset)
             {

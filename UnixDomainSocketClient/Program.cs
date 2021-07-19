@@ -13,31 +13,20 @@ namespace UnixDomainSocketClient
             var bufferSize = 5;
             var path = @"C:\temp\file.soc";
 
-            Console.WriteLine(@"Provide client type (1 - demon, 2 - JSON, other)");
-            var clientType = Console.ReadKey();
+            var client = new ClientWithAvailable() {
+                BufferSize = bufferSize,
+                Interval = 0,
+                Type = ClientType.Demon,
+                ExampleJson = "Examples/SimpleExample.json",
+                MsgPrefix = "Test_",
+                DisableConsoleOutput = true,
+                PrintCounterEveryMilisecond = 5000
+            };
 
-            switch (clientType.KeyChar)
-            {
-                case '1':
-                    {
-                        Console.WriteLine("Provide interval in ms");
-                        var interval = int.Parse(Console.ReadLine());
-
-                        Console.WriteLine("Provide msg prefix");
-                        var messagePrefix = Console.ReadLine();
-
-                        await new ClientWithAvailable() { BufferSize = bufferSize, Interval = interval, Type = ClientType.Demon, MsgPrefix = messagePrefix }.Start(path);
-                        break;
-                    }
-                case '2':
-                    {
-                        await new ClientWithAvailable() { BufferSize = bufferSize, Type = ClientType.JsonSender01, ExampleJson = "Examples/SimpleIncorrect.json" }.Start(path);
-                        break;
-                    }
-                default:
-                    await new ClientWithAvailable() { BufferSize = bufferSize }.Start(path);
-                    break;
-            }
+            Console.WriteLine($"Client type:{client.Type}");
+            Console.WriteLine("Press any key to start.");
+            Console.ReadKey();
+            await client.Start(path);
 
             Console.ReadLine();
         }

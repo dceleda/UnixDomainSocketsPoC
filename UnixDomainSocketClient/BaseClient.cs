@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UnixDomainSocketClient
@@ -15,6 +16,23 @@ namespace UnixDomainSocketClient
         public string MsgPrefix { get; set; } = "Test_";
         public int Counter { get; set; } = 0;
         public int BufferSize { get; set; } = 1024;
+        public bool DisableConsoleOutput { get; set; }
+        public int PrintCounterEveryMilisecond { get; set; }
+
+        private Timer _timer;
+
+        public virtual async Task Start(string path)
+        {
+            if(PrintCounterEveryMilisecond > 0)
+            {
+                _timer = new Timer(PrintCounter, null, PrintCounterEveryMilisecond, PrintCounterEveryMilisecond);
+            }
+        }
+
+        private void PrintCounter(object state)
+        {
+            Console.WriteLine($"Counter:{Counter}");
+        }
 
         protected async Task<string> GetInput()
         {
@@ -24,12 +42,14 @@ namespace UnixDomainSocketClient
                     await Task.Delay(Interval);
 
                     Counter++;
-                    return $"{MsgPrefix}{Counter}";
-                case ClientType.JsonSender01:
-                    Console.WriteLine("Press any key to send JSON");
-                    Console.ReadKey();
-                    Console.WriteLine();
-                    return File.ReadAllText(ExampleJson);
+                    if (string.IsNullOrEmpty(ExampleJson))
+                    {
+                        return $"{MsgPrefix}{Counter}";
+                    }
+                    else
+                    {
+                        return File.ReadAllText(ExampleJson);
+                    }
                 default:
                     break;
             }
@@ -37,12 +57,19 @@ namespace UnixDomainSocketClient
             Console.WriteLine("[Client]Enter something: ");
             return Console.ReadLine();
         }
+
+        protected void PrintOutput(string text)
+        {
+            if (!DisableConsoleOutput)
+            {
+                Console.WriteLine(text);
+            }
+        }
     }
 
     public enum ClientType
     {
         Normal = 0,
-        Demon = 1,
-        JsonSender01 = 2
+        Demon = 1
     }
 }
