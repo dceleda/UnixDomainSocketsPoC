@@ -120,7 +120,7 @@ namespace UnixDomainSocketsServer
                     var incoming = Encoding.UTF8.GetString(state.Buffer, 0, read);
                     state.MsgBuilder.Append(incoming);
 
-                    if (read < StateObject.BufferSize)
+                    if (read < StateObject.BufferSize || read == StateObject.BufferSize && clientSocket.Available == 0)
                     {
                         // PROCESS the message
                         clientSocket.Send(Encoding.UTF8.GetBytes(state.MsgBuilder.ToString().ToUpper()));

@@ -13,7 +13,7 @@ namespace UnixDomainSocketsServer
         static void Main(string[] args)
         {
 
-            new AsyncRunnerWithAvailable().Start();
+            new StreamRunner().Start();
             // wait for server to start
             Thread.Sleep(2000);
 

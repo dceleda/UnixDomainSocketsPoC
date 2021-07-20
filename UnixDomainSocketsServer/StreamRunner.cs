@@ -99,7 +99,7 @@ namespace UnixDomainSocketsServer
                                     break;
                                 }
 
-                                JsonSerializer deserializer = new JsonSerializer();
+                                JsonSerializer deserializer = new JsonSerializer() { TraceWriter = new ConsoleTraceWriter() };
                                 Person person = null;
 
                                 try

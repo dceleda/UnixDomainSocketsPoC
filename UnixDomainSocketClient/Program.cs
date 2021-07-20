@@ -16,11 +16,11 @@ namespace UnixDomainSocketClient
             var client = new ClientWithAvailable() {
                 BufferSize = bufferSize,
                 Interval = 0,
-                Type = ClientType.Demon,
+                Type = ClientType.Normal,
                 ExampleJson = "Examples/SimpleExample.json",
                 MsgPrefix = "Test_",
-                DisableConsoleOutput = true,
-                PrintCounterEveryMilisecond = 5000
+                DisableConsoleOutput = false,
+                PrintCounterEveryMilisecond = 0
             };
 
             Console.WriteLine($"Client type:{client.Type}");
