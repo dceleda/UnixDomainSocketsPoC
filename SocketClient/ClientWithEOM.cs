@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UnixDomainSocketClient
+namespace SocketClient
 {
     public class ClientWithEOM : BaseClient
     {

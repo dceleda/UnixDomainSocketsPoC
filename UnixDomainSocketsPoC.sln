@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnixDomainSocketsServer", "UnixDomainSocketsServer\UnixDomainSocketsServer.csproj", "{93E486E7-8A59-44E6-BACF-EF8DC43A0917}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnixDomainSocketClient", "UnixDomainSocketClient\UnixDomainSocketClient.csproj", "{578BDBC8-C719-4A23-8439-5CDF8C3FEFDA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocketClient", "SocketClient\SocketClient.csproj", "{578BDBC8-C719-4A23-8439-5CDF8C3FEFDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

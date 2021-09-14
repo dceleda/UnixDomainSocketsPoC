@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UnixDomainSocketClient
+namespace SocketClient
 {
     public class ClientWithAvailable : BaseClient
     {
@@ -29,6 +29,7 @@ namespace UnixDomainSocketClient
 
                         if (line.ToUpper() == "CLOSE")
                         {
+                            socket.Disconnect(false);
                             socket.Close();
                             break;
                         }
@@ -47,12 +48,11 @@ namespace UnixDomainSocketClient
                                 sb.Append(stringReceived);
                                 if (byteRecv < BufferSize || byteRecv == BufferSize && socket.Available == 0)
                                 {
-                                    break;
+                                    PrintOutput(sb.ToString());
+                                    sb.Clear();
                                 }
                                 byteRecv = socket.Receive(bytes);
                             }
-
-                            PrintOutput(sb.ToString());
                         }
                     }
                 }

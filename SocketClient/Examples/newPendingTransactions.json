@@ -1,0 +1,1 @@
+﻿{"id": 1, "method": "eth_subscribe", "params": ["newPendingTransactions"]}

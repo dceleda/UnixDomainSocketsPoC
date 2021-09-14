@@ -4,20 +4,21 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UnixDomainSocketClient
+namespace SocketClient
 {
     class Program
     {
         static async Task Main(string[] args)
         {
             var bufferSize = 5;
-            var path = @"C:\temp\file.soc";
+            //var path = @"C:\temp\nethIpc.soc";
+            var path = @"geth.ipc";
 
-            var client = new ClientWithAvailable() {
+            var client = new NamedPipeClient() {
                 BufferSize = bufferSize,
                 Interval = 0,
                 Type = ClientType.Normal,
-                ExampleJson = "Examples/SimpleExample.json",
+                ExampleJson = "Examples/newPendingTransactions.json",
                 MsgPrefix = "Test_",
                 DisableConsoleOutput = false,
                 PrintCounterEveryMilisecond = 0

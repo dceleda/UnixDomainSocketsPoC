@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace UnixDomainSocketClient
+namespace SocketClient
 {
     public abstract class BaseClient
     {
