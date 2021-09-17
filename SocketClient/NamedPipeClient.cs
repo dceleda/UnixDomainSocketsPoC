@@ -10,6 +10,8 @@ namespace SocketClient
 {
     public class NamedPipeClient : BaseClient
     {
+        private UTF8Encoding _streamEncoding = new ();
+        
         public override async Task Start(string path)
         {
             try
@@ -20,11 +22,18 @@ namespace SocketClient
                     new NamedPipeClientStream(".", path, PipeDirection.InOut, PipeOptions.None, TokenImpersonationLevel.None);
 
                 pipeClient.Connect();
-                
-                var ss = new StreamString(pipeClient);
 
-                ss.WriteString("{\"id\": 1, \"method\": \"eth_subscribe\", \"params\": [\"newPendingTransactions\"]}{\"id\": 1, \"method\": \"eth_subscribe\", \"params\": [\"newPendingTransactions\"]}");
-                var r = ss.ReadString();
+                // Task.Factory.StartNew(() => );
+                
+                while (true)
+                {
+                    var line = await GetInput();
+                    WriteString(line, pipeClient);
+                    ReadString(pipeClient);
+                }
+
+                // ss.WriteString("{\"id\": 1, \"method\": \"eth_subscribe\", \"params\": [\"newPendingTransactions\"]}{\"id\": 1, \"method\": \"eth_subscribe\", \"params\": [\"newPendingTransactions\"]}");
+                
             }
             catch (Exception exc)
             {
@@ -33,30 +42,32 @@ namespace SocketClient
             finally
             {
             }
-        }
-        
-        public class StreamString
-        {
-            private Stream ioStream;
-            private UTF8Encoding streamEncoding;
-
-            public StreamString(Stream ioStream)
+            
+            void ReadString(NamedPipeClientStream client)
             {
-                this.ioStream = ioStream;
-                streamEncoding = new UTF8Encoding();
+                var inBuffer = new byte[BufferSize];
+                StringBuilder sb = new();
+                int byteRecv = client.Read(inBuffer);
+                
+                while (byteRecv > 0)
+                {
+                    var stringReceived = Encoding.UTF8.GetString(inBuffer, 0, byteRecv);
+                    sb.Append(stringReceived);
+                    if (byteRecv < BufferSize)
+                    {
+                        PrintOutput(sb.ToString());
+                        sb.Clear();
+
+                        return;
+                    }
+
+                    byteRecv = client.Read(inBuffer);
+                }
             }
 
-            public string ReadString()
+            int WriteString(string outString, NamedPipeClientStream client)
             {
-                var inBuffer = new byte[10000];
-                ioStream.Read(inBuffer, 0, 10000);
-
-                return streamEncoding.GetString(inBuffer);
-            }
-
-            public int WriteString(string outString)
-            {
-                byte[] outBuffer = streamEncoding.GetBytes(outString);
+                byte[] outBuffer = _streamEncoding.GetBytes(outString);
                 int len = outBuffer.Length;
                 if (len > UInt16.MaxValue)
                 {
@@ -64,8 +75,8 @@ namespace SocketClient
                 }
                 // ioStream.WriteByte((byte)(len / 256));
                 // ioStream.WriteByte((byte)(len & 255));
-                ioStream.Write(outBuffer, 0, len);
-                ioStream.Flush();
+                client.Write(outBuffer, 0, len);
+                client.Flush();
 
                 return outBuffer.Length + 2;
             }

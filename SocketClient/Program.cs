@@ -10,11 +10,11 @@ namespace SocketClient
     {
         static async Task Main(string[] args)
         {
-            var bufferSize = 5;
-            //var path = @"C:\temp\nethIpc.soc";
-            var path = @"geth.ipc";
+            var bufferSize = 1024;
+            var path = @"C:\temp\nethIpc.soc";
+            // var path = @"geth.ipc";
 
-            var client = new NamedPipeClient() {
+            var client = new ClientWithAvailable() {
                 BufferSize = bufferSize,
                 Interval = 0,
                 Type = ClientType.Normal,
